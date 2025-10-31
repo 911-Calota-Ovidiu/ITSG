@@ -1,21 +1,22 @@
 import os
 import cv2
-# import pytesseract
 from flask import Flask, request, render_template_string, send_file, redirect, url_for
 import pandas as pd
 from ocr_utils import auto_extract_structured_fields
 import numpy as np
+import uuid
 
 # -------------------------------
 # CONFIGURATION
 # -------------------------------
-# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 APP_ROOT = os.path.dirname(__file__)
 UPLOAD_FOLDER = os.path.join(APP_ROOT, 'uploads')
+STATIC_FOLDER = os.path.join(APP_ROOT, 'static')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(STATIC_FOLDER, exist_ok=True)
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=STATIC_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # -------------------------------
@@ -48,7 +49,8 @@ RESULT_HTML = """
 <style>
   body { font-family: sans-serif; margin: 2em; background-color: #f9f9f9; color: #333; }
   h2 { color: #333; text-align: center; }
-  .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 2em; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+  .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 2em; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+  .result-image { max-width: 100%; height: auto; border: 1px solid #ccc; margin-bottom: 2em; }
   table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
   td, th { border: 1px solid #ddd; padding: 8px; }
   tr:nth-child(even) { background-color: #f2f2f2; }
@@ -61,6 +63,9 @@ RESULT_HTML = """
 </style>
 <div class="container">
   <h2>OCR result for {{filename}}</h2>
+  
+  <img src="{{ url_for('static', filename=result_image_filename) }}" alt="OCR Result Image" class="result-image">
+
   <form method="post" action="/save">
   <table>
   {% for k,v in results.items() %}
@@ -99,10 +104,24 @@ def upload():
     # --- Automatic field extraction ---
     ocr_results = auto_extract_structured_fields(img)
 
+    # --- Draw bounding boxes on the image ---
+    img_with_boxes = img.copy()
+    for key, data in ocr_results.items():
+        bbox = data.get('bbox')
+        if bbox:
+            (x, y, w, h) = bbox
+            cv2.rectangle(img_with_boxes, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            cv2.putText(img_with_boxes, key, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+    
+    # Save the image with boxes to a temporary file
+    result_image_filename = f"result_{uuid.uuid4().hex}.png"
+    result_image_path = os.path.join(app.static_folder, result_image_filename)
+    cv2.imwrite(result_image_path, img_with_boxes)
+
     # convert to dict: field -> value
     results = {k: v['value'] for k, v in ocr_results.items()}
 
-    return render_template_string(RESULT_HTML, results=results, filename=f.filename)
+    return render_template_string(RESULT_HTML, results=results, filename=f.filename, result_image_filename=result_image_filename)
 
 @app.route('/save', methods=['POST'])
 def save():
