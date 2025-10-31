@@ -1,0 +1,90 @@
+CNAS
+VIZA PLĂTITORULUI
+Data/Semnătura
+Motivul refuzului la plată
+
+FORMULAR CU REGIM SPECIAL
+Urgentare: DA ☑ NU ☐
+Inițial ☑
+În continuare ☐
+Seriarii certificatelui anterior inițial/continuare:
+1384563
+
+CERTIFICAT DE CONCEDIU MEDICAL Seria CCMAT Nr. 1384563
+Valabil pentru luna IULIE anul 2021 pt. Cod indemnizație (1-17) 06 22
+Asigurat în evidența la CAS: CASA OPSNAJ
+Numele și prenumele: [redactat]
+Cod numeric personal: 970430315861
+Cod numeric personal al copilului bolnav/pacientului cu afecțiuni oncologice:
+Domiciliu, reședință: [redactat]
+Localitatea: [redactat]
+Strada: [redactat] Nr. [redactat]
+Scara: Etaj: Ap.: Judet/Sector: [redactat]
+
+Nr. ÎNREG. (RCF/CO): 261591
+Data acordării zilei/luna/an: 30/06/2021
+De la ziua/luna/an: 30/06/2021
+Până la ziua/luna/an: 31/06/2021
+Cod diagnostic: 499
+Concediu acordat pentru:
+Ambulator/internat în spital
+Cod unitate sanitară: LILAAZZLAAZZLLAAZZLAA
+Cu CAS: CASA OPSNAJ
+
+Unitatea sanitară emitentă:
+Spitalul Clinic de Urgență „Prof. Dr. Agrippa Ionescu”
+Medic eliberator/Semnătură/Parafă:
+Dr. LILAAZZLAAZZLLAAZZLAA
+
+(Ștampilă și semnătură de înregistrare)
+CAS emitentă: 1280
+
+Cod parafă:
+Director General
+Medic Șef
+
+PLĂTITOR:
+Sediul:
+Număr angajați:
+Tip asigurat: Salariat: art. 1 alin. (1), lit. A, Ordinanța de urgență a Guvernului nr. 158/2005 privind concediile și indemnizațiile de asigurări sociale de sănătate
+Cod parafă
+Șomer:
+Persoane prevăzute la art. 1 alin. (2) și art. 32 din Ordinanța de urgență a Guvernului nr. 158/2005 privind concediile și indemnizațiile de asigurări sociale de sănătate
+Asigurat conform Legii nr. 346/2002 privind asigurarea pentru accidente de muncă și boli profesionale
+
+Procent plată: 75% ☑ 85% ☐ 100% ☐ 50% ☐
+Baza de calcul al indemnizației de asigurări sociale de sănătate se stabilește ca medie a veniturilor brute lunare din ultimele 6 luni din cele 12 luni anterioare lunii pentru care se acordă concediul medical.
+
+Indemnizație suportată de către angajator
+Zile:
+Indemnizație suportată de către bugetul FNUASS
+Zile:
+Indemnizație suportată din fondul de asigurare pentru accidente de muncă și boli profesionale
+Zile:
+
+Avizul medicului expert
+Nr.:
+Data:
+Nume și prenume:
+Semnătura:
+
+Aviz Casa Teritorială de Pensii
+Nr.:
+Data:
+Nume și prenume:
+Semnătura:
+
+Aviz Direcția de Sănătate Publică
+Nr.:
+Data:
+Nume și prenume:
+Semnătura:
+
+Aviz comisie de risc maternal
+Nr.:
+Data:
+Nume și prenume:
+Semnătura:
+
+Semnătura de primire asigurat:
+Data primirii: 30.06.2021

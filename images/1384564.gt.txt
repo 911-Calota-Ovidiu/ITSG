@@ -1,0 +1,101 @@
+CNAS
+
+VIZA PLĂTITORULUI
+Data/Semnătura
+Motivul refuzului la plată
+
+FORMULAR CU REGIM SPECIAL
+Urgenta medicală 351 chirurgicală
+Iniţial ☑
+În continuare ☐
+Serii certificatului anterior iniţial/continuare: CCMAT 1384563
+
+CERTIFICAT DE CONCEDIU MEDICAL Seria CCMAT Nr. 1384564
+
+Valabil pentru luna: august anul 2025 pt. Cod indemnizaţie (1–17) 06 îngrijirea copilului bolnav
+
+Asigurat în evidenţa la CAS
+Numele şi prenumele: [redactat]
+Cod numeric personal: [redactat]
+Cod numeric personal al copilului bolnav/pacientului cu handicap: [redactat]
+Domiciliul, reşedinţa: [redactat]
+Localitatea: [redactat]
+Strada: [redactat]
+Nr.: [redactat] Bl. [redactat]
+Scara: [redactat] Etaj: [redactat] Ap.: [redactat]
+Judeţ/Sector: [redactat]
+
+Nr. Înreg. (RF/CO): 3519
+Data acordării 31.07.2025
+Nr. zile acordate 10 zile
+De la ziua/luna 31.07.2025
+Până la ziua/luna 09.08.2025
+Cod diagnostic 126
+
+Ambulator/internat în spital
+Secţia: [necompletat]
+Concediu eliberat de unitatea sanitară:
+Spitalul Clinic Județean de Urgență Sibiu
+CUI (cod unic de înregistrare): 4917949
+CAS emitentă: C.A.S. SIBIU
+
+Medicul Semnătură/Parafă
+Dr. Iliana Z. L.
+Cod parafă: 15783
+Director General
+Dr. Alina A. Zărzavă
+Cod parafă: 8913
+
+Medic Şef Secţie/Semnătură/Parafă
+Cod parafă: [necompletat]
+
+PLĂTITOR: [necompletat]
+Sediul: [necompletat]
+C.U.I.: [necompletat]
+Număr angajaţi: [necompletat]
+
+Salariat art. 1 alin. (1), lit. A din Ordonanţa de urgenţă a Guvernului nr. 158/2005 privind concediile şi indemnizaţiile de asigurări sociale de sănătate şi pentru aprobarea Normelor de aplicare a prevederilor O.U.G. nr. 158/2005, aprobate prin Ordinul nr. 60/32/2006.
+
+Tip asigurat: Salariat
+Someri ☐
+Persoane prevăzute la art. 1 alin. (1) lit. B şi C din O.U.G. nr. 158/2005 ☐
+Asigurat conform Legii nr. 346/2002 privind asigurarea pentru accidente de muncă şi boli profesionale ☐
+
+Procent plătit: 75%
+Zile: [necompletat]
+
+Indemnizaţie suportată de către angajator
+Zile: [necompletat]
+
+Indemnizaţie suportată din FNUASS
+Zile: [necompletat]
+
+Indemnizaţie suportată din fond de asigurare pentru accidente de muncă şi boli profesionale
+Zile: [necompletat]
+
+Aviz medicul expert al asigurărilor sociale
+Data: [necompletat]
+Nume şi prenume / Semnătura: [necompletat]
+
+Aviz Casa Teritorială de Pensii
+Data: [necompletat]
+Nume şi prenume / Semnătura: [necompletat]
+
+Aviz Direcţia de Sănătate Publică
+Data: [necompletat]
+Nume şi prenume / Semnătura: [necompletat]
+
+Aviz conducătorul casei militare de pensii
+Data: [necompletat]
+Nume şi prenume / Semnătura: [necompletat]
+
+Semnătura de primire asigurat
+Data primirii: 31.07.2025
+
+✅ Tip document: Certificat de concediu medical (România)
+✅ Seria: CCMAT 1384564
+✅ Perioada: 31.07.2025 – 09.08.2025
+✅ Motiv: Îngrijirea copilului bolnav (Cod 06)
+✅ Emitent: Spitalul Clinic Județean de Urgență Sibiu
+
+To make this kind of text extraction from any image instantly and editable directly in your browser, try DeepSeek AI, the free Chrome extension for instant image-to-text conversion:
