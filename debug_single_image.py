@@ -1,7 +1,7 @@
 import os
 from ocr_utils import easyocr_words, find_label_boxes, normalize_text
 
-IMAGE_PATH = "/home/tchibo/Documents/ITSG/training_data/1384563.png"
+IMAGE_PATH = "/home/tchibo/Documents/ITSG/training_data/6847680.png"
 
 def debug_cnp():
     """Runs a detailed analysis on a single image to debug CNP extraction."""

@@ -9,9 +9,9 @@ from datetime import datetime
 EXPECTED_LABELS = {
     "medical_emergency_code": ["urgenta medico-", "urgență medico-", "urgență medico"],
     "continued": ["in continuare", "în continuare"],
-    "series": ["seria", "serie", "Seria"],
+    "series": ["seria", "serie", "Seria", "CERTIFICAT DE CONCEDIU MEDICAL Seria"],
     "number": ["nr", "Nr", "nr.", "Nr."],
-    "indemnisation code": ["cod indemnizatie", "Cod indemnizație (1-17)"],
+    "indemnification_code": ["cod indemnizatie", "Cod indemnizație (1-17)"],
     "CNP": ["cnp", "cod numeric personal:", "cod numeric", "CNP:"],
     "child_CNP": ["Cod numeric personal al copilului bolnav/", "Cod numeric personal al copilului bolnav/ pacientului cu afectiuni oncologice"],
     "start_date": ["data de la", "de la", "data inceput", "data început", "data debut", "de la zi/luna/an"],
@@ -21,7 +21,7 @@ EXPECTED_LABELS = {
     "doctor_name": ["medic", "nume medic", "semnatura medic", "doctor", "medic semnatura", "parafa si semnatura medicului", "parafa medic", "Medic/Semnatura/Parafa"],
 }
 
-LABEL_MATCH_THRESHOLD = 75
+LABEL_MATCH_THRESHOLD = 70 # Lowered from 75 to be more forgiving
 
 # Initialize EasyOCR reader for Romanian only
 eocr_reader = easyocr.Reader(['ro'], gpu=False)
@@ -47,8 +47,10 @@ def find_label_boxes(words, expected_labels=EXPECTED_LABELS, threshold=LABEL_MAT
                     best_score = score
                     best_match = (i, ocr_text, score)
         if best_match and best_score >= threshold:
-            i, text, score = best_match
-            found[label_key] = {'word_idx': i, 'ocr_text': text, 'score': score, 'word': words[i]}
+            # Avoid matching the same word to multiple labels
+            if best_match[0] not in [f.get('word_idx') for f in found.values()]:
+                i, text, score = best_match
+                found[label_key] = {'word_idx': i, 'ocr_text': text, 'score': score, 'word': words[i]}
     return found
 
 def extract_value_for_label(words, label_entry, max_horizontal_gap_ratio=0.5, max_vertical_gap_ratio=0.2):
@@ -68,12 +70,17 @@ def extract_value_for_label(words, label_entry, max_horizontal_gap_ratio=0.5, ma
     if candidates:
         candidates = sorted(candidates, key=lambda t: t[1]['bbox'][0])
         selected_words_indices = [candidates[0][0]]
-        last_x_end = candidates[0][1]['bbox'][0] + candidates[0][1]['bbox'][2]
+        last_word_idx = candidates[0][0]
+        
         for (j, went) in candidates[1:]:
+            last_word_bbox = words[last_word_idx]['bbox']
+            last_x_end = last_word_bbox[0] + last_word_bbox[2]
             gap = went['bbox'][0] - last_x_end
-            if gap < lw * 1.5:
+            
+            # New robust gap logic: gap should be less than ~2x the height of the last word.
+            if gap < (last_word_bbox[3] * 2.5):
                 selected_words_indices.append(j)
-                last_x_end = went['bbox'][0] + went['bbox'][2]
+                last_word_idx = j
             else:
                 break
         text = " ".join([words[k]['text'] for k in selected_words_indices])
@@ -84,15 +91,16 @@ def extract_value_for_label(words, label_entry, max_horizontal_gap_ratio=0.5, ma
 def postprocess_field(field_key, raw_text):
     if raw_text is None: return ''
     s = raw_text.strip()
-    if field_key == 'CNP':
+    if field_key == 'CNP' or field_key == 'child_CNP':
         digits = re.sub(r'\D', '', s)
         if len(digits) >= 13:
             return digits[:13]
         return digits
-    if field_key == 'ccmat':
-        numbers = re.findall(r'\d{7,}', s)
+    if field_key == 'number':
+        # Find a 7-digit number specifically
+        numbers = re.findall(r'\b(\d{7})\b', s)
         return numbers[0] if numbers else s
-    if 'date' in field_key.lower() or field_key in ('start_date','end_date','birth_date'):
+    if 'date' in field_key.lower() or field_key in ('start_date','end_date'):
         s2 = re.sub(r'[^0-9./-]', '', s)
         for fmt in ['%d.%m.%Y','%d.%m.%y','%d/%m/%Y','%d/%m/%y','%d-%m-%Y','%d-%m-%y']:
             try:
