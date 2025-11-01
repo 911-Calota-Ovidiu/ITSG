@@ -77,6 +77,23 @@ def detect_checkbox_continuare(image_gray):
         return "da", roi_coords
     return "nu", roi_coords
 
+def extract_urgenta(image_gray):
+    # Coordonatele sunt bazate pe "harta", unde "Urgentimadio:" a fost la (1264, 95)
+    # și textul scris de mână la (1589, 101)
+    roi_coords = (1589, 101, 210, 67)
+    x, y, w, h = roi_coords
+    roi = image_gray[y:y + h, x:x + w]
+    processed_roi = treat_handwriting(roi)
+    # Forțăm să caute un singur cuvânt format din 2 caractere
+    raw_text = pytesseract.image_to_string(processed_roi, lang="ron+eng", config=r'--psm 8').strip()
+
+    translated_text = translate_chars_to_digits(raw_text.upper())
+    # Păstrăm doar cifrele
+    digits = re.sub(r'\D', '', translated_text)
+    if len(digits) == 2:
+        return digits, roi_coords, raw_text
+    return "necunoscut", roi_coords, raw_text
+
 # --- MAIN LOGIC ---
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert('RGB')
@@ -96,6 +113,16 @@ if uploaded_file is not None:
     img_with_boxes = img_resized_color.copy()
 
     # Extragem fiecare câmp folosind funcția sa dedicată
+
+    urgenta_text, (x, y, w, h), raw_urgenta = extract_urgenta(img_resized_gray)
+    final_data["Urgenta Medicochirurgicala"] = urgenta_text
+    raw_texts["Urgenta"] = raw_urgenta
+    if urgenta_text != "necunoscut": cv2.rectangle(img_with_boxes, (x, y), (x + w, y + h), (0, 255, 255), 3)  # Galben pentru urgenta
+
+    checkbox_val, (x,y,w,h) = detect_checkbox_continuare(img_resized_gray)
+    final_data["In Continuare"] = checkbox_val
+    cv2.rectangle(img_with_boxes, (x, y), (x + w, y + h), (255, 0, 0), 3) # Albastru pentru checkbox
+
     serie_text, (x,y,w,h) = extract_serie(img_resized_gray)
     final_data["Seria Certificat"] = serie_text if serie_text else "necunoscut"
     raw_texts["Serie"] = serie_text
@@ -110,10 +137,6 @@ if uploaded_file is not None:
     final_data["Cod Indemnizatie"] = cod_text
     raw_texts["Cod"] = raw_cod
     if cod_text != "necunoscut": cv2.rectangle(img_with_boxes, (x, y), (x + w, y + h), (0, 255, 0), 3)
-
-    checkbox_val, (x,y,w,h) = detect_checkbox_continuare(img_resized_gray)
-    final_data["In Continuare"] = checkbox_val
-    cv2.rectangle(img_with_boxes, (x, y), (x + w, y + h), (255, 0, 0), 3) # Albastru pentru checkbox
 
     # --- Procesare și citire pe TOATĂ imaginea ---
     processed_image = treat_print(img_resized_gray)
