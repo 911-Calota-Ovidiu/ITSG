@@ -6,9 +6,10 @@ import numpy as np
 import pandas as pd
 import io
 import re
+from image_processing import PROCESSING_ALGORITHMS
 
 # Configurare Tesseract
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 st.set_page_config(layout="wide")
 st.title("🩺 Certificate Medicale OCR (Demo robust)")
@@ -16,120 +17,100 @@ st.write("Încarcă o imagine cu un certificat medical pentru a extrage textul a
 
 uploaded_file = st.file_uploader("Alege o imagine", type=["jpg", "jpeg", "png"])
 
-def extract_certificate_data(text):
-    """Funcție care primește textul OCR și returnează DataFrame cu mai multe coloane."""
-    
-    def find_first(patterns, text, group=1):
-        for pat in patterns:
-            match = re.search(pat, text, re.IGNORECASE)
+def extract_from_text(text, data_dict):
+    """Încearcă să completeze câmpurile goale din data_dict folosind textul extras."""
+
+    # Seria și Numărul
+    if data_dict.get("Seria Certificat", "necunoscut") == "necunoscut":
+        pattern_seria = r"seria\s+([A-Z0-9]+)"
+        match_seria = re.search(pattern_seria, text, re.IGNORECASE)
+        if match_seria:
+            data_dict["Seria Certificat"] = match_seria.group(1).strip()
+
+    if data_dict.get("Numar Certificat", "necunoscut") == "necunoscut":
+        pattern_numar = r"nr\.\s*([0-9]+)"
+        match_numar = re.search(pattern_numar, text, re.IGNORECASE)
+        if match_numar:
+            data_dict["Numar Certificat"] = match_numar.group(1).strip()
+
+    # Codul de indemnizație (vânătoare flexibilă cu validare)
+    if data_dict.get("Cod Indemnizatie", "necunoscut") == "necunoscut":
+        # Lista de modele, de la cel mai specific la cel mai general
+        cod_patterns = [
+            r"Cod\s+indemnizatie\s*\(1-17\):?\s*(\d{2})",  # Modelul ideal
+            r"indemnizatie\s*\(1-17\):?\s*(\d{2})",       # Fără "Cod"
+            r"\(1-17\):?\s*(\d{2})",                       # Doar "(1-17)"
+            r"(\d{2})"                                     # Orice două cifre, ca ultimă soluție
+        ]
+
+        for pattern in cod_patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
             if match:
-                return match.group(group).strip()
-        return "necunoscut"
-
-    # Nume pacient
-    nume_patterns = [
-        r"Nume\s*[:\-]?\s*([A-ZĂÂÎȘȚa-zăâîșț\s]+)",
-        r"Angajat\s*[:\-]?\s*([A-ZĂÂÎȘȚa-zăâîșț\s]+)",
-        r"Se adevereste ea\s*([A-ZĂÂÎȘȚa-zăâîșț\s]+)"
-    ]
-    nume = find_first(nume_patterns, text)
-
-    # CNP
-    cnp_patterns = [r"\b\d{13}\b"]
-    cnp = find_first(cnp_patterns, text, group=0)
-
-    # Cod boală
-    cod_boala_patterns = [
-        r"[A-Z]\d{2}\.\d",
-        r"[A-Z]\d{2}\s\d"
-    ]
-    cod_boala = find_first(cod_boala_patterns, text, group=0)
-
-    # Data început concediu
-    data_inceput_patterns = [
-        r"Data început\s*[:\-]?\s*(\d{2}[./]\d{2}[./]\d{4})",
-        r"(\d{2}[./]\d{2}[./]\d{4})",
-        r"(\d{4}-\d{2}-\d{2})"
-    ]
-    data_inceput = find_first(data_inceput_patterns, text)
-
-    # Data sfârșit concediu
-    data_sfarsit_patterns = [
-        r"Data sfârșit\s*[:\-]?\s*(\d{2}[./]\d{2}[./]\d{4})",
-        r"Până la\s*(\d{2}[./]\d{2}[./]\d{4})"
-    ]
-    data_sfarsit = find_first(data_sfarsit_patterns, text)
-
-    # Medic
-    medic_patterns = [
-        r"Medic\s*[:\-]?\s*([A-ZĂÂÎȘȚa-zăâîșț\s]+)",
-        r"Semnătura medicului\s*([A-ZĂÂÎȘȚa-zăâîșț\s]+)"
-    ]
-    medic = find_first(medic_patterns, text)
-
-    # Seria certificatului
-    seria_patterns = [
-        r"Seria\s*[:\-]?\s*([A-Z0-9]+)",
-        r"Nr\s*[:\-]?\s*([A-Z0-9]+)"
-    ]
-    seria = find_first(seria_patterns, text)
-
-    data_dict = {
-        "Nume pacient": [nume],
-        "CNP": [cnp],
-        "Cod boală": [cod_boala],
-        "Data început concediu": [data_inceput],
-        "Data sfârșit concediu": [data_sfarsit],
-        "Medic": [medic],
-        "Seria certificatului": [seria]
-    }
-
-    return pd.DataFrame(data_dict)
+                try:
+                    num = int(match.group(1).strip())
+                    # Validare: codul trebuie să fie între 1 și 17
+                    if 1 <= num <= 17:
+                        # Formatare la două cifre (ex: 6 -> "06")
+                        data_dict["Cod Indemnizatie"] = f"{num:02d}"
+                        break  # Am găsit un cod valid, oprim căutarea
+                except (ValueError, IndexError):
+                    continue # Ignorăm dacă nu putem converti în număr
+    
+    return data_dict
 
 if uploaded_file is not None:
-    # Citim imaginea
     image = Image.open(uploaded_file)
-    st.image(image, caption="Imagine încărcată", use_container_width=True)
-
-    # Convertim în format OpenCV
     img_cv = np.array(image)
     img_gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
 
-    # --- Redimensionare moderată pentru imagini mari ---
-    max_dim = 1200
+    # --- Redimensionare la o rezoluție mai mare ---
+    max_dim = 2600
     height, width = img_gray.shape
     if max(height, width) > max_dim:
         scale = max_dim / max(height, width)
-        img_gray = cv2.resize(img_gray, (int(width*scale), int(height*scale)), interpolation=cv2.INTER_CUBIC)
+        img_gray = cv2.resize(img_gray, (int(width*scale), int(height*scale)), interpolation=cv2.INTER_AREA)
 
-    # --- Binarizare simplă globală ---
-    _, img_gray = cv2.threshold(img_gray, 150, 255, cv2.THRESH_BINARY)
+    st.subheader("🖼️ Variante de Imagine Procesată")
+    cols = st.columns(len(PROCESSING_ALGORITHMS))
+    processed_images = {}
 
-    # --- Detectare și corectare orientare (mai sigur) ---
-    try:
-        osd = pytesseract.image_to_osd(img_gray)
-        rotation_angle = int(re.search(r'Rotate:\s(\d+)', osd).group(1))
-        if rotation_angle != 0:
-            st.write(f"Rotire detectată: {rotation_angle}° → corectăm...")
-            M = cv2.getRotationMatrix2D((img_gray.shape[1]/2, img_gray.shape[0]/2), -rotation_angle, 1)
-            img_gray = cv2.warpAffine(img_gray, M, (img_gray.shape[1], img_gray.shape[0]))
-    except:
-        pass  # dacă nu poate detecta orientarea, continuăm fără rotație
+    for col, (name, func) in zip(cols, PROCESSING_ALGORITHMS.items()):
+        with col:
+            st.write(f"**{name}**")
+            img_p = func(img_gray)
+            processed_images[name] = img_p
+            st.image(img_p, use_container_width=True)
 
-    st.write("🔍 Procesăm imaginea cu Tesseract OCR...")
+    # --- Extragere în cascadă ---
+    st.subheader("🔍 Rezultate OCR & Extragere")
+    final_data = {
+        "Seria Certificat": "necunoscut",
+        "Numar Certificat": "necunoscut",
+        "Cod Indemnizatie": "necunoscut"
+    }
 
-    # OCR cu Page Segmentation Mode potrivit pentru blocuri de text
-    custom_config = r'--psm 6'  # treat image as a block of text
-    extracted_text = pytesseract.image_to_string(img_gray, lang="ron", config=custom_config)
+    for name, img_p in processed_images.items():
+        with st.expander(f"🔬 Rezultate detaliate pentru algoritmul: **{name}**"):
+            st.write(f"Se rulează OCR pe imaginea procesată cu **{name}**...")
+            
+            # Încercăm diferite moduri de segmentare
+            for psm in [6, 11, 12]:
+                custom_config = f'--psm {psm}'
+                extracted_text = pytesseract.image_to_string(img_p, lang="ron+eng", config=custom_config)
+                
+                # Verificăm dacă textul extras conține ceva relevant
+                if len(extracted_text.strip()) > 5:
+                    st.text_area(f"Text extras (psm={psm})", extracted_text, height=150, key=f"{name}_psm_{psm}")
+                    final_data = extract_from_text(extracted_text, final_data)
 
-    # Afișăm textul extras
-    st.subheader("🧾 Text extras:")
-    st.text_area("Rezultat OCR", extracted_text, height=200)
+        # Oprim dacă am găsit toate datele
+        if all(val != "necunoscut" for val in final_data.values()):
+            st.success(f"Toate datele au fost găsite folosind algoritmul {name}! 🎉")
+            break
 
-    # --- Extragem datele folosind funcția ---
-    df = extract_certificate_data(extracted_text)
-
-    st.subheader("📊 Date extrase:")
+    # --- Afișare rezultate finale ---
+    st.subheader("📊 Date Finale Extrase")
+    df = pd.DataFrame([final_data])
     st.dataframe(df)
 
     # Buton pentru export Excel
