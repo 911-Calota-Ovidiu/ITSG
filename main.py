@@ -185,11 +185,10 @@ if uploaded_file is not None:
                 phrase_center_x = (min_x + max_x) // 2
                 phrase_center_y = (min_y + max_y) // 2
 
-                # Define target position for the top-left corner of the phrase
                 target_x_position = original_width // 20  # 5% from left edge
-                target_y_position = original_height // 25 # 4% from top edge
+                target_y_position = original_height // 25  # 4% from top edge
 
-                # Calculate the required shift for the content
+                # Calculate the required shift for the content to center the phrase
                 shift_x = target_x_position - min_x
                 shift_y = target_y_position - min_y
 
@@ -293,11 +292,7 @@ if uploaded_file is not None:
 
     st.subheader("✅ Verificare Vizuală Chirurgicală")
 
-    # Display images side-by-side
-    col1, col2 = st.columns(2)
-    with col1:
-        st.image(aligned_img_color, caption="Imagine Aliniată (cu chenar frază țintă)")
-    with col2:
-        st.image(img_with_boxes, caption="Zonele de interes operate")
+    # Display only the final image with boxes
+    st.image(img_with_boxes, caption="Zonele de interes operate")
 
     # ... (codul de export Excel)
