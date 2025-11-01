@@ -144,97 +144,88 @@ if uploaded_file is not None:
     img_resized_color = cv2.resize(img_cv_color, (TARGET_WIDTH, new_height), interpolation=cv2.INTER_CUBIC)
 
     # --- Image Alignment ---
-    target_phrase = "CERTIFICAT DE CONCEDIU MEDICAL"
-    target_words = [word.lower() for word in target_phrase.split()]
-
     aligned_img_color = img_resized_color.copy()
     aligned_img_gray = img_resized_gray.copy()
 
     original_width = aligned_img_gray.shape[1]
     original_height = aligned_img_gray.shape[0]
 
-    # Perform OCR on the resized grayscale image to find the phrase
+    # Perform OCR on the resized grayscale image to find all text
     d = pytesseract.image_to_data(aligned_img_gray, lang="ron+eng", config=r'--psm 3', output_type=pytesseract.Output.DICT)
     n_boxes = len(d['text'])
 
     print(f"[DEBUG] Tesseract detected words: {d['text']}")
 
-    phrase_found = False
+    # Calculate the bounding box of all detected text with reasonable confidence
+    all_text_min_x = float('inf')
+    all_text_max_x = float('-inf')
+    all_text_min_y = float('inf')
+    all_text_max_y = float('-inf')
+    
+    found_any_text = False
+
+    for i in range(n_boxes):
+        # Consider only words with confidence > 30 and non-empty text
+        if int(d['conf'][i]) > 30 and d['text'][i].strip() != '':
+            all_text_min_x = min(all_text_min_x, d['left'][i])
+            all_text_max_x = max(all_text_max_x, d['left'][i] + d['width'][i])
+            all_text_min_y = min(all_text_min_y, d['top'][i])
+            all_text_max_y = max(all_text_max_y, d['top'][i] + d['height'][i])
+            found_any_text = True
+
     alignment_shift_x = 0  # This will be the shift applied to ROIs
     alignment_shift_y = 0  # This will be the shift applied to ROIs
 
-    # Iterate through the detected words to find the phrase
-    for i in range(n_boxes - len(target_words) + 1):
-        current_sequence = [d['text'][i + j].lower() for j in range(len(target_words))]
+    if found_any_text:
+        text_block_center_x = (all_text_min_x + all_text_max_x) // 2
+        text_block_center_y = (all_text_min_y + all_text_max_y) // 2
 
-        if current_sequence == target_words:
-            # Phrase found, calculate its bounding box
-            min_x = float('inf')
-            max_x = float('-inf')
-            min_y = float('inf')
-            max_y = float('-inf')
+        image_center_x = original_width // 2
+        image_center_y = original_height // 2
 
-            for j in range(len(target_words)):
-                word_index = i + j
-                min_x = min(min_x, d['left'][word_index])
-                max_x = max(max_x, d['left'][word_index] + d['width'][word_index])
-                min_y = min(min_y, d['top'][word_index])
-                max_y = max(max_y, d['top'][word_index] + d['height'][word_index])
+        # Calculate the required shift for the content to center the text block
+        shift_x = image_center_x - text_block_center_x
+        shift_y = image_center_y - text_block_center_y
 
-            if min_x != float('inf'):  # If words were found
-                phrase_center_x = (min_x + max_x) // 2
-                phrase_center_y = (min_y + max_y) // 2
+        print(f"[DEBUG] Overall text block found at x: {all_text_min_x}-{all_text_max_x}, y: {all_text_min_y}-{all_text_max_y}.")
+        print(f"[DEBUG] Text block center: ({text_block_center_x}, {text_block_center_y}). Image center: ({image_center_x}, {image_center_y}).")
+        print(f"[DEBUG] Calculated shift_x: {shift_x}, shift_y: {shift_y}")
 
-                target_x_position = original_width // 20  # 5% from left edge
-                target_y_position = original_height // 25  # 4% from top edge
+        # Calculate padding needed to prevent cropping for negative shifts
+        pad_left = max(0, -shift_x)
+        pad_top = max(0, -shift_y)
 
-                # Calculate the required shift for the content to center the phrase
-                shift_x = target_x_position - min_x
-                shift_y = target_y_position - min_y
+        # Total translation for warpAffine (includes padding)
+        tx_for_warpAffine = shift_x + pad_left
+        ty_for_warpAffine = shift_y + pad_top
 
-                print(f"[DEBUG] Phrase '{target_phrase}' found at x: {min_x}-{max_x}, y: {min_y}-{max_y}.")
-                print(f"[DEBUG] Target position: ({target_x_position}, {target_y_position}). Calculated shift_x: {shift_x}, shift_y: {shift_y}")
+        new_output_width = original_width + abs(shift_x)
+        new_output_height = original_height + abs(shift_y)
 
-                # Calculate padding needed to prevent cropping for negative shifts
-                pad_left = max(0, -shift_x)
-                pad_top = max(0, -shift_y)
+        M = np.float32([[1, 0, tx_for_warpAffine], [0, 1, ty_for_warpAffine]])
 
-                # Total translation for warpAffine (includes padding)
-                tx_for_warpAffine = shift_x + pad_left
-                ty_for_warpAffine = shift_y + pad_top
+        aligned_img_color = cv2.warpAffine(img_resized_color, M, (new_output_width, new_output_height), borderMode=cv2.BORDER_CONSTANT, borderValue=(255, 255, 255))
+        aligned_img_gray = cv2.warpAffine(img_resized_gray, M, (new_output_width, new_output_height), borderMode=cv2.BORDER_CONSTANT, borderValue=255)  # White border for gray image
 
-                new_output_width = original_width + abs(shift_x)
-                new_output_height = original_height + abs(shift_y)
+        # The actual shift of the original image's top-left corner within the new canvas
+        # This is the amount by which all original ROI coordinates need to be shifted
+        alignment_shift_x = tx_for_warpAffine
+        alignment_shift_y = ty_for_warpAffine
 
-                M = np.float32([[1, 0, tx_for_warpAffine], [0, 1, ty_for_warpAffine]])
+        print(f"[DEBUG] warpAffine tx: {tx_for_warpAffine}, ty: {ty_for_warpAffine}")
+        print(f"[DEBUG] new_output_width: {new_output_width}, new_output_height: {new_output_height}")
+        print(f"[DEBUG] alignment_shift_x (for ROIs): {alignment_shift_x}, alignment_shift_y (for ROIs): {alignment_shift_y}")
 
-                aligned_img_color = cv2.warpAffine(img_resized_color, M, (new_output_width, new_output_height), borderMode=cv2.BORDER_CONSTANT, borderValue=(255, 255, 255))
-                aligned_img_gray = cv2.warpAffine(img_resized_gray, M, (new_output_width, new_output_height), borderMode=cv2.BORDER_CONSTANT, borderValue=255)  # White border for gray image
+        # Draw rectangle around the detected text block on the aligned image for visual debugging
+        cv2.rectangle(aligned_img_color, 
+                      (int(all_text_min_x + tx_for_warpAffine), int(all_text_min_y + ty_for_warpAffine)), 
+                      (int(all_text_max_x + tx_for_warpAffine), int(all_text_max_y + ty_for_warpAffine)), 
+                      (255, 0, 255), 5) # Magenta color, thicker line
 
-                # The actual shift of the original image's top-left corner within the new canvas
-                # This is the amount by which all original ROI coordinates need to be shifted
-                alignment_shift_x = tx_for_warpAffine
-                alignment_shift_y = ty_for_warpAffine
-
-                print(f"[DEBUG] warpAffine tx: {tx_for_warpAffine}, ty: {ty_for_warpAffine}")
-                print(f"[DEBUG] new_output_width: {new_output_width}, new_output_height: {new_output_height}")
-                print(f"[DEBUG] alignment_shift_x (for ROIs): {alignment_shift_x}, alignment_shift_y (for ROIs): {alignment_shift_y}")
-
-                # Draw rectangle around the detected phrase on the aligned image for visual debugging
-                # The coordinates for drawing the rectangle need to be adjusted by the alignment_shift_x/y
-                cv2.rectangle(aligned_img_color, 
-                              (int(min_x + tx_for_warpAffine), int(min_y + ty_for_warpAffine)), 
-                              (int(max_x + tx_for_warpAffine), int(max_y + ty_for_warpAffine)), 
-                              (255, 0, 255), 5) # Magenta color, thicker line
-
-
-            phrase_found = True
-            break  # Phrase found and image aligned, exit loop
-
-    if not phrase_found:
-        st.warning(f"Fraza \'{target_phrase}\' nu a fost găsită pentru aliniere. Procesarea continuă fără aliniere.")
-        print(f"[DEBUG] Phrase '{target_phrase}' NOT found in detected words.")
-        print(f"[DEBUG] Full Tesseract data when phrase not found:")
+    else:
+        st.warning(f"Nu a fost detectat suficient text pentru aliniere. Procesarea continuă fără aliniere.")
+        print(f"[DEBUG] No significant text found for alignment.")
+        print(f"[DEBUG] Full Tesseract data when no text found:")
         for i in range(n_boxes):
             if d['text'][i].strip() != '': # Only print non-empty words
                 print(f"  Word: '{d['text'][i]}', BBox: ({d['left'][i]}, {d['top'][i]}, {d['width'][i]}, {d['height'][i]}), Conf: {d['conf'][i]}")
