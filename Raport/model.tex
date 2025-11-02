@@ -30,7 +30,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[LE,RO]{Medical Certificate OCR}
-\fancyhead[RE,LO]{Team Bisturiu}
+\fancyhead[RE,LO]{Team Meseriasii}
 \fancyfoot[RE,LO]{ITSG 2024-2025}
 \fancyfoot[LE,RO]{\thepage}
 
@@ -42,9 +42,9 @@
   \color{lime}\leaders\hrule height \footrulewidth\hfill}}
 
 \hypersetup{
-pdftitle={Medical Certificate OCR Automation},
-pdfauthor={Badea Dan-Nicolai, Badu Catalin Ioachim, Calota Ovidiu, Cibotariu Andrei},
-pdfkeywords={OCR, AI, medical forms, Streamlit, Tesseract, Python},
+pdftitle={artTitle},
+pdfauthor={name},
+pdfkeywords={pdf, latex, tex, ps2pdf, dvipdfm, pdflatex},
 bookmarksnumbered,
 pdfstartview={FitH},
 urlcolor=cyan,
@@ -52,6 +52,7 @@ colorlinks=true,
 linkcolor=red,
 citecolor=green,
 }
+
 
 \setcounter{secnumdepth}{3}
 \setcounter{tocdepth}{3}
@@ -82,10 +83,10 @@ FACULTY OF MATHEMATICS AND COMPUTER SCIENCE
 
 \begin{flushright}
 \Large{\textbf{Team members}}\\
-Badea Dan-Nicolai, Informatics,\\
-Badu C\u at\u alin Ioachim, Informatics,\\
-Calot\u a Ovidiu, Informatics,\\
-Cibotariu Andrei, Informatics
+Badea Dan-Nicolai,\\
+Badu C\u at\u alin Ioachim,\\
+Calot\u a Ovidiu,\\
+Cibotariu Andrei
 \end{flushright}
 
 \vspace{4cm}
@@ -107,7 +108,7 @@ The system was tested on a small dataset of scanned documents (``small data'' ap
 
 \begin{center}
 \includegraphics[width=0.7\textwidth]{Flow-diagram-of-traditional-OCR-system}
-\captionof{figure}{Graphical abstract of the workflow: upload image → preprocess → OCR → extract fields → export.}
+\captionof{figure}{Graphical abstract of the workflow: upload image -> preprocess -> OCR -> extract fields -> export.}
 \end{center}
 
 \end{abstract}
@@ -182,7 +183,7 @@ The use of intelligent algorithms is justified by the need to adapt dynamically 
 
 OCR (Optical Character Recognition) technology is widely used in form digitization, with notable tools like Google Vision API and Tesseract OCR. However, most solutions assume consistent layouts and clean printed text.
 
-Recent research (e.g., \cite{Koh06}, \cite{Storn95}) explores deep learning models (CNN, CRNN, Transformers) for handwriting recognition. While effective, these require large labeled datasets — unsuitable for our “small data” scenario.
+Recent research (e.g., \cite{Koh06}, \cite{Storn95}) explores deep learning models (CNN, CRNN, Transformers) for handwriting recognition. Although effective, these require large labeled datasets — unsuitable for our “small data” scenario.
 
 Our system instead applies classical computer vision preprocessing, combined with field-specific logic, achieving high precision without training data. This hybrid approach bridges the gap between static OCR and adaptive AI interpretation.
 
@@ -196,7 +197,7 @@ The algorithm consists of four main stages:
 \item \textbf{Preprocessing:} image is converted to grayscale, resized, and realigned by detecting text-block centers using Tesseract OCR bounding boxes.
 \item \textbf{Field-specific extraction:} each region of interest (ROI) is processed by a custom function depending on content type (printed/handwritten).
 \item \textbf{OCR recognition:} pytesseract is called with tuned configurations (\texttt{--psm 7/8}, whitelist filters).
-\item \textbf{Post-processing:} character translation (O→0, I→1, etc.) and field validation (CNP = 13 digits).
+\item \textbf{Post-processing:} character translation (O->0, I->1, etc.) and field validation (CNP = 13 digits).
 \end{enumerate}
 
 \begin{algorithm}
@@ -223,7 +224,7 @@ The algorithm consists of four main stages:
 \section{Example workflow}
 \begin{center}
 \includegraphics[width=0.8\textwidth]{app}
-\captionof{figure}{System workflow: upload → preprocess → extract → visualize → export.}
+\captionof{figure}{System workflow: upload -> preprocess -> extract -> visualize -> export.}
 \end{center}
 
 %---------------------------------------
@@ -241,10 +242,9 @@ Evaluation criteria:
 \end{itemize}
 
 \section{Data}
-Testing used a small dataset (20 scanned certificates) covering:
+The testing used a small data set (20 scanned certificates) covering:
 \begin{itemize}
-\item 10 printed, aligned certificates
-\item 10 handwritten certificates (different doctors)
+\item 10 printed with handwriting (different people), aligned certificates
 \end{itemize}
 
 \section{Results}
@@ -255,11 +255,11 @@ Testing used a small dataset (20 scanned certificates) covering:
 \begin{tabular}{l c c}
 \textbf{Field} & \textbf{Printed accuracy (\%)} & \textbf{Handwritten accuracy (\%)}\\
 \hline
-Certificate number & 95 & 80\\
+Certificate number & 95 & 50\\
 Series & 92 & 85\\
-Indemnity code & 90 & 70\\
-CNP & 88 & 75\\
-Emergency flag & 100 & 90\\
+Indemnity code & 90 & 60\\
+CNP & 88 & 25\\
+Emergency flag & 100 & 70\\
 \hline
 \textbf{Average} & \textbf{93} & \textbf{78}\\
 \end{tabular}
@@ -276,7 +276,7 @@ The hypothesis that field-specific preprocessing improves OCR performance is sup
 \item \textbf{Strengths:} Works with small datasets; modular; easy debugging; high interpretability.
 \item \textbf{Weaknesses:} Sensitive to very poor handwriting; ROI coordinates are static.
 \item \textbf{Opportunities:} Integration of CNN handwriting models; cloud OCR services.
-\item \textbf{Threats:} Changes in certificate template; variations in scanner quality.
+\item \textbf{Threats:} Changes in the certificate template; variations in scanner quality.
 \end{itemize}
 
 %---------------------------------------
@@ -294,6 +294,7 @@ Future improvements:
 
 The modular design ensures reproducibility and extensibility to other administrative documents, highlighting the power of hybrid AI systems in real-world automation.
 
+\nocite{*}
 \bibliographystyle{plain}
 \bibliography{BibAll}
 
