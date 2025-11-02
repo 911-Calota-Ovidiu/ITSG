@@ -53,7 +53,6 @@ linkcolor=red,
 citecolor=green,
 }
 
-
 \setcounter{secnumdepth}{3}
 \setcounter{tocdepth}{3}
 \linespread{1}
@@ -146,6 +145,7 @@ The report is structured as follows:
 \item Chapter \ref{section:scientificProblem} defines the scientific problem.
 \item Chapter \ref{chapter:stateOfArt} presents related work and alternative OCR methods.
 \item Chapter \ref{chapter:proposedApproach} describes the proposed algorithm in detail.
+\item Chapter \ref{chapter:solutieInteligenta} presents the logic and technologies used in the solution.
 \item Chapter \ref{chapter:application} covers the experimental validation.
 \item Chapter \ref{chapter:swot} and Chapter \ref{chapter:concl} present the analysis and conclusions.
 \end{itemize}
@@ -183,7 +183,7 @@ The use of intelligent algorithms is justified by the need to adapt dynamically 
 
 OCR (Optical Character Recognition) technology is widely used in form digitization, with notable tools like Google Vision API and Tesseract OCR. However, most solutions assume consistent layouts and clean printed text.
 
-Recent research (e.g., \cite{Koh06}, \cite{Storn95}) explores deep learning models (CNN, CRNN, Transformers) for handwriting recognition. Although effective, these require large labeled datasets — unsuitable for our “small data” scenario.
+Recent research (e.g. \cite{Koh06}, \cite{Storn95}) explores deep learning models (CNN, CRNN, Transformers) for handwriting recognition. Although effective, these require large labeled datasets - unsuitable for our "small data" scenario.
 
 Our system instead applies classical computer vision preprocessing, combined with field-specific logic, achieving high precision without training data. This hybrid approach bridges the gap between static OCR and adaptive AI interpretation.
 
@@ -226,6 +226,51 @@ The algorithm consists of four main stages:
 \includegraphics[width=0.8\textwidth]{app}
 \captionof{figure}{System workflow: upload -> preprocess -> extract -> visualize -> export.}
 \end{center}
+
+%---------------------------------------
+\chapter{Description of smart solution}
+\label{chapter:solutieInteligenta}
+
+The intelligent solution implemented in this project combines traditional image processing techniques with OCR to extract structured information from Romanian medical certificates.
+
+\section{Logic of the Solution}
+The algorithm follows a four-stage process:
+\begin{enumerate}
+\item \textbf{Preprocessing:} the scanned image is converted to grayscale, resized to a standard width, and realigned by detecting the main text-blocks using Tesseract OCR bounding boxes. This ensures that ROI coordinates can be applied consistently.
+\item \textbf{Region-specific Processing:} each defined ROI (certificate number, series, CNP, etc.) is processed using a method tailored to the content type. Printed fields undergo contrast enhancement and sharpening, while handwritten fields are treated with adaptive thresholding and morphological operations.
+\item \textbf{Text Recognition and Post-processing:} OCR (Tesseract via Python) extracts text from each ROI. Post-processing applies character translations (e.g., O->0, I->1) and field validation rules (e.g., CNP must have 13 digits, numeric ranges for indemnity code).
+\item \textbf{Data Structuring:} extracted information is compiled into a structured format (DataFrame), ready for Excel export and HR system import.
+\end{enumerate}
+
+\section{Technology Stack and Tools}
+\begin{itemize}
+\item \textbf{Programming Language:} Python 3.x
+\item \textbf{Editor / IDE:} VS Code (or any Python IDE)
+\item \textbf{Libraries:} 
+  \begin{itemize}
+  \item \texttt{OpenCV} - image preprocessing
+  \item \texttt{Pillow} - image loading and conversion
+  \item \texttt{pytesseract} - OCR engine
+  \item \texttt{NumPy / Pandas} - numerical computations and data structuring
+  \item \texttt{Streamlit} - interactive web interface
+  \end{itemize}
+\item \textbf{Workload Management:} modular functions for each ROI reduce complexity; preprocessing and OCR stages can be executed in parallel if needed.
+\item \textbf{Debugging and Validation:} 
+  \begin{itemize}
+  \item Visual debugging by overlaying ROI bounding boxes on images.
+  \item Logging of raw OCR outputs for comparison with post-processed data.
+  \item Unit testing for individual field extraction functions.
+  \end{itemize}
+\item \textbf{Bug Identification:} discrepancies are identified by:
+  \begin{itemize}
+  \item OCR confidence scores
+  \item Field-specific validation rules (e.g., numeric ranges, CNP length)
+  \item Manual verification of annotated test images
+  \end{itemize}
+\end{itemize}
+
+\noindent
+This solution demonstrates a hybrid approach: classical computer vision for preprocessing and adaptive logic combined with OCR, achieving high accuracy without requiring large-scale machine learning models.
 
 %---------------------------------------
 \chapter{Application (Numerical Validation)}
@@ -280,17 +325,10 @@ The hypothesis that field-specific preprocessing improves OCR performance is sup
 \end{itemize}
 
 %---------------------------------------
-\chapter{Conclusion and Future Work}
+\chapter{Conclusion}
 \label{chapter:concl}
 
 The proposed system efficiently automates data extraction from medical certificates using intelligent OCR and computer vision. It demonstrates how traditional algorithms, when combined with adaptive logic, can achieve high precision even with limited data.
-
-Future improvements:
-\begin{itemize}
-\item Replace static ROI coordinates with template-free region detection.
-\item Integrate machine learning for handwriting correction.
-\item Add cloud synchronization for direct HR software integration.
-\end{itemize}
 
 The modular design ensures reproducibility and extensibility to other administrative documents, highlighting the power of hybrid AI systems in real-world automation.
 
