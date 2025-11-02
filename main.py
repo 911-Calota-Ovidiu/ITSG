@@ -8,7 +8,7 @@ import io
 import re
 from image_processing import treat_print, treat_handwriting
 
-st.set_page_config(layout="wide", page_title="OCR")
+st.set_page_config(layout="wide", page_title="Operațiunea: Bisturiul (OCR)")
 st.title("🩺 Recunoaștere automată OCR")
 st.caption("Aplicație pentru extragerea automată a datelor din certificate medicale. "
            "Toate câmpurile sunt prelucrate prin funcții specializate pentru scris de mână și text tipărit.")
@@ -31,7 +31,7 @@ def extract_serie(image_gray, x_offset=0, y_offset=0):
     y += y_offset
     roi = image_gray[y:y + h, x:x + w]
     processed_roi = treat_print(roi)
-    text = pytesseract.image_to_string(processed_roi, lang="ron+eng", config=r'--psm 7').strip()
+    text = pytesseract.image_to_string(processed_roi, lang="ron+eng", config=r'--psm 8').strip()
     return text, (x, y, w, h)
 
 def extract_numar(image_gray, x_offset=0, y_offset=0):
@@ -42,7 +42,7 @@ def extract_numar(image_gray, x_offset=0, y_offset=0):
     roi = image_gray[y:y + h, x:x + w]
     processed_roi = treat_print(roi)
     text = pytesseract.image_to_string(processed_roi, lang="ron+eng",
-                                       config=r'--psm 7 -c tessedit_char_whitelist=0123456789').strip()
+                                       config=r'--psm 8 -c tessedit_char_whitelist=0123456789').strip()
     return text, (x, y, w, h)
 
 def extract_cod(image_gray, x_offset=0, y_offset=0):
@@ -78,7 +78,7 @@ def detect_checkbox_continuare(image_gray, x_offset=0, y_offset=0):
     return "nu", (x, y, w, h)
 
 def extract_urgenta(image_gray, x_offset=0, y_offset=0):
-    roi_coords = (1580, 95, 250, 80)
+    roi_coords = (1580, 90, 250, 105)
     x, y, w, h = roi_coords
     x += x_offset
     y += y_offset
@@ -113,6 +113,36 @@ def extract_ambulator_internat_sectia(image_gray, x_offset=0, y_offset=0):
     roi = image_gray[y:y + h, x:x + w]
     processed_roi = treat_handwriting(roi)
     text = pytesseract.image_to_string(processed_roi, lang="ron+eng", config=r'--psm 6').strip()
+    return text, (x, y, w, h)
+
+def extract_de_la(image_gray, x_offset=0, y_offset=0):
+    roi_coords = (1430, 1540, 450, 105)
+    x, y, w, h = roi_coords
+    x += x_offset
+    y += y_offset
+    roi = image_gray[y:y + h, x:x + w]
+    processed_roi = treat_handwriting(roi)
+    text = pytesseract.image_to_string(processed_roi, lang="ron+eng", config=r'--psm 8 -c tessedit_char_whitelist=0123456789').strip()
+    return text, (x, y, w, h)
+
+def extract_pana_la(image_gray, x_offset=0, y_offset=0):
+    roi_coords = (1880, 1540, 450, 105)
+    x, y, w, h = roi_coords
+    x += x_offset
+    y += y_offset
+    roi = image_gray[y:y + h, x:x + w]
+    processed_roi = treat_handwriting(roi)
+    text = pytesseract.image_to_string(processed_roi, lang="ron+eng", config=r'--psm 8 -c tessedit_char_whitelist=0123456789').strip()
+    return text, (x, y, w, h)
+
+def extract_cod_diagnostic(image_gray, x_offset=0, y_offset=0):
+    roi_coords = (2320, 1540, 400, 105)
+    x, y, w, h = roi_coords
+    x += x_offset
+    y += y_offset
+    roi = image_gray[y:y + h, x:x + w]
+    processed_roi = treat_handwriting(roi)
+    text = pytesseract.image_to_string(processed_roi, lang="ron+eng", config=r'--psm 8 -c tessedit_char_whitelist=0123456789').strip()
     return text, (x, y, w, h)
 
 if uploaded_file is not None:
@@ -213,6 +243,18 @@ if uploaded_file is not None:
     final_data["Ambulator/Internat in spital Sectia"] = ambulator_text
     raw_texts["Ambulator/Internat in spital Sectia"] = ambulator_text
     cv2.rectangle(img_with_boxes, (x, y), (x + w, y + h), (0, 0, 255), 3)
+    de_la_text, (x, y, w, h) = extract_de_la(img_resized_gray, alignment_shift_x, alignment_shift_y)
+    final_data["De la"] = de_la_text
+    raw_texts["De la"] = de_la_text
+    cv2.rectangle(img_with_boxes, (x, y), (x + w, y + h), (128, 0, 128), 3)
+    pana_la_text, (x, y, w, h) = extract_pana_la(img_resized_gray, alignment_shift_x, alignment_shift_y)
+    final_data["Pana la"] = pana_la_text
+    raw_texts["Pana la"] = pana_la_text
+    cv2.rectangle(img_with_boxes, (x, y), (x + w, y + h), (0, 128, 128), 3)
+    cod_diagnostic_text, (x, y, w, h) = extract_cod_diagnostic(img_resized_gray, alignment_shift_x, alignment_shift_y)
+    final_data["Cod diagnostic"] = cod_diagnostic_text
+    raw_texts["Cod diagnostic"] = cod_diagnostic_text
+    cv2.rectangle(img_with_boxes, (x, y), (x + w, y + h), (128, 128, 0), 3)
     processed_full_image = treat_print(img_resized_gray)
     full_extracted_text = pytesseract.image_to_string(processed_full_image, lang="ron+eng", config=r'--psm 6').strip()
     st.success("✅ Extragerea a fost realizată cu succes!")
