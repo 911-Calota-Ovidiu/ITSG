@@ -145,6 +145,26 @@ def extract_cod_diagnostic(image_gray, x_offset=0, y_offset=0):
     text = pytesseract.image_to_string(processed_roi, lang="ron+eng", config=r'--psm 8 -c tessedit_char_whitelist=0123456789').strip()
     return text, (x, y, w, h)
 
+def extract_cu_cas(image_gray, x_offset=0, y_offset=0):
+    roi_coords = (2485, 1740, 400, 105)
+    x, y, w, h = roi_coords
+    x += x_offset
+    y += y_offset
+    roi = image_gray[y:y + h, x:x + w]
+    processed_roi = treat_handwriting(roi)
+    text = pytesseract.image_to_string(processed_roi, lang="ron+eng", config=r'--psm 6').strip()
+    return text, (x, y, w, h)
+
+def extract_unitate_sanitara(image_gray, x_offset=0, y_offset=0):
+    roi_coords = (520, 2190, 600, 105)
+    x, y, w, h = roi_coords
+    x += x_offset
+    y += y_offset
+    roi = image_gray[y:y + h, x:x + w]
+    processed_roi = treat_handwriting(roi)
+    text = pytesseract.image_to_string(processed_roi, lang="ron+eng", config=r'--psm 6').strip()
+    return text, (x, y, w, h)
+
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert('RGB')
     img_cv_color = np.array(image)
@@ -255,6 +275,15 @@ if uploaded_file is not None:
     final_data["Cod diagnostic"] = cod_diagnostic_text
     raw_texts["Cod diagnostic"] = cod_diagnostic_text
     cv2.rectangle(img_with_boxes, (x, y), (x + w, y + h), (128, 128, 0), 3)
+    cu_cas_text, (x, y, w, h) = extract_cu_cas(img_resized_gray, alignment_shift_x, alignment_shift_y)
+    final_data["Cu CAS"] = cu_cas_text
+    raw_texts["Cu CAS"] = cu_cas_text
+    cv2.rectangle(img_with_boxes, (x, y), (x + w, y + h), (255, 0, 255), 3)
+    unitate_sanitara_text, (x, y, w, h) = extract_unitate_sanitara(img_resized_gray, alignment_shift_x, alignment_shift_y)
+    final_data["Unitate Sanitara Emitenta"] = unitate_sanitara_text
+    raw_texts["Unitate Sanitara Emitenta"] = unitate_sanitara_text
+    cv2.rectangle(img_with_boxes, (x, y), (x + w, y + h), (0, 255, 128), 3)
+
     processed_full_image = treat_print(img_resized_gray)
     full_extracted_text = pytesseract.image_to_string(processed_full_image, lang="ron+eng", config=r'--psm 6').strip()
     st.success("✅ Extragerea a fost realizată cu succes!")
