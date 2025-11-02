@@ -8,7 +8,7 @@ import io
 import re
 from image_processing import treat_print, treat_handwriting
 
-st.set_page_config(layout="wide", page_title="Operațiunea: Bisturiul (OCR)")
+st.set_page_config(layout="wide", page_title="OCR")
 st.title("🩺 Recunoaștere automată OCR")
 st.caption("Aplicație pentru extragerea automată a datelor din certificate medicale. "
            "Toate câmpurile sunt prelucrate prin funcții specializate pentru scris de mână și text tipărit.")
