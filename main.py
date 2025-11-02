@@ -115,7 +115,7 @@ def extract_urgenta(image_gray, x_offset=0, y_offset=0):
 def extract_cnp_copil(image_gray, x_offset=0, y_offset=0):
     # Coordonate estimative. VA TREBUI SA LE AJUSTEZI TU!
     # Am pus o zona larga, bazata pe pozitia CNP-ului adultului din harta anterioara
-    roi_coords = (794, 955, 400, 100)  # (x, y, w, h) - estimativ
+    roi_coords = (1255, 1030, 960, 100)  # (x, y, w, h) - estimativ
     x, y, w, h = roi_coords
     x += x_offset  # Apply x offset
     y += y_offset  # Apply y offset
@@ -285,7 +285,7 @@ if uploaded_file is not None:
     st.dataframe(df_results, use_container_width=True)
 
     st.subheader("🖼️ Verificare vizuală (zone analizate)")
-    st.image(img_with_boxes, caption="Zonele de interes procesate", use_container_width=True)
+    st.image(img_with_boxes, caption="Zonele de interes procesate", width=1000)
 
     # === Export Excel ===
     st.subheader("📤 Export rezultate")
