@@ -11,11 +11,12 @@ from image_processing import treat_print, treat_handwriting
 # Configurare Tesseract
 # pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-st.set_page_config(layout="wide")
-st.title("🩺 OPERAȚIUNEA: Bisturiul (v4 - Curățenie Generală)")
-st.write("Fiecare câmp este procesat de o funcție specializată.")
+st.set_page_config(layout="wide", page_title="Operațiunea: Bisturiul (OCR)")
+st.title("🩺 Recunoaștere automată OCR")
+st.caption("Aplicație pentru extragerea automată a datelor din certificate medicale. "
+           "Toate câmpurile sunt prelucrate prin funcții specializate pentru scris de mână și text tipărit.")
 
-uploaded_file = st.file_uploader("Alege o imagine", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("📷 Încarcă o imagine (JPG/PNG)", type=["jpg", "jpeg", "png"])
 
 # --- "Schema" pentru Traducere ---
 CHAR_MAP = {
@@ -274,16 +275,27 @@ if uploaded_file is not None:
     processed_full_image = treat_print(img_resized_gray)
     full_extracted_text = pytesseract.image_to_string(processed_full_image, lang="ron+eng", config=r'--psm 6').strip()
 
-    # --- Afișare rezultate ---
-    st.subheader("🧾 Text Brut Extras din Toată Imaginea")
-    st.text_area("Text complet", full_extracted_text, height=300)
+    # === Afișare Rezultate ===
+    st.success("✅ Extragerea a fost realizată cu succes!")
+    st.subheader("🧾 Text brut extras")
+    st.text_area("Rezultatul OCR complet", full_extracted_text, height=300)
 
-    st.subheader("🏆 Rezultate Finale")
-    st.dataframe(pd.DataFrame([final_data]))
+    st.subheader("📋 Date structurate extrase")
+    df_results = pd.DataFrame([final_data])
+    st.dataframe(df_results, use_container_width=True)
 
-    st.subheader("✅ Verificare Vizuală Chirurgicală")
+    st.subheader("🖼️ Verificare vizuală (zone analizate)")
+    st.image(img_with_boxes, caption="Zonele de interes procesate", use_container_width=True)
 
-    # Display only the final image with boxes
-    st.image(img_with_boxes, caption="Zonele de interes operate")
+    # === Export Excel ===
+    st.subheader("📤 Export rezultate")
+    excel_buffer = io.BytesIO()
+    with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+        df_results.to_excel(writer, index=False, sheet_name="Rezultate_OCR")
 
-    # ... (codul de export Excel)
+    st.download_button(
+        label="💾 Descarcă fișier Excel",
+        data=excel_buffer.getvalue(),
+        file_name="rezultate_OCR.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
