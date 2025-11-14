@@ -15,6 +15,17 @@ st.caption("Aplicație pentru extragerea automată a datelor din certificate med
 
 uploaded_file = st.file_uploader("📷 Încarcă o imagine (JPG/PNG)", type=["jpg", "jpeg", "png"])
 
+# --- Placeholder functions ---
+# (Since these are in image_processing.py, we put stubs here)
+# You might need to import your *real* functions if they do more
+def treat_print(img):
+    """Placeholder for image_processing.treat_print"""
+    return img  # Pass-through for testing
+
+def treat_handwriting(img):
+    """Placeholder for image_processing.treat_handwriting"""
+    return img  # Pass-through for testing
+
 CHAR_MAP = {
     'O': '0', 'I': '1', 'Z': '2', 'S': '5', 'G': '6', 'B': '8'
 }
